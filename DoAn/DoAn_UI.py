@@ -25,6 +25,16 @@ DEFAULT_IMG = np.zeros((256, 256, 3), np.uint8)
 DEFAULT_IMG[:] = ImageColor.getrgb(IMAGE_BG_COLOR)
 
 
+import tensorflow as tf
+IMAGE_SIZE = (224,224)
+def decode_and_resize(path):
+  image = tf.io.read_file(path)
+  image = tf.image.decode_jpeg(image, channels=3)
+  image = tf.image.convert_image_dtype(image, dtype='float32')
+  image = tf.image.resize(image, IMAGE_SIZE)
+
+  return image
+
 def get_all_styles():
     images = []
     folder = f"{os.getcwd()}\\Styles_Template"
@@ -83,7 +93,7 @@ templates_list = get_all_styles()
 current_page = 1
 max_page = len(templates_list) // 10 + 1
 
-video = cv2.VideoCapture(0)
+
 
 # Khởi tạo các gui
 image_description = sg.Text(text='Image'
@@ -192,8 +202,8 @@ while True:
         file_path = sg.popup_get_file(message='', no_window=True, file_types=(('Image Files', '*.jpg; *.png'),))
         if file_path:
             try:
-                image = cv2.imread(file_path)
-                image = cv2.resize(image, IMAGE_SIZE)
+                image = decode_and_resize(file_path)
+                print(type(image))
                 fill_image()
             except Exception as e:
                 sg.popup_error(e)
@@ -248,10 +258,12 @@ while True:
         if recording:
             window['-BTN COMBINE-'].update(disabled=False)
             window['-BTN Open Camera-'].update(button_color=DEFAULT_BTN_COLOR)
+            video.release()
         # Xử lý khi đang tắt cam
         else:
             window['-BTN COMBINE-'].update(disabled=True)
             window['-BTN Open Camera-'].update(button_color=CAPTURING_BTN_COLOR)
+            video = cv2.VideoCapture(0)
         clear_result()
         recording = not recording
 
